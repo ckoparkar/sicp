@@ -215,7 +215,7 @@
 
 (integral cube 0 1 0.001)
 
-(defn integral2 [f a b n]
+(defn simpson-integral [f a b n]
   (let [h (/ (- b a) n) k 0]
     
     (defn yn [k]
@@ -234,4 +234,62 @@
     )
   )
 
-(integral2 cube 0 1.0 1000)
+(simpson-integral cube 0 1.0 1000)
+
+(defn sum-i [a b term next]
+  (defn iter [a result]
+    (if 
+        (> a b) result
+        (iter (next a) (+ result (term a)))
+        )
+    )
+  (iter a 0)
+  )
+
+(sum-i 1 10 cube inc)
+
+(defn product [a b term next]
+  (if
+      (> a b) 1
+      (* (term a) (product (next a) b term next))))
+
+;; gives factorial
+(product 1 10 (fn [x] x) inc)
+
+
+(defn product-i [a b term next]
+  (defn iter [a result]
+    (if
+        (> a b) result
+        (iter (next a) (* result (term a)))
+        ))
+  (iter a 1)
+  )
+
+(product-i 1 10 (fn [x] x) inc)
+
+;; (accumulate (combiner a b) base-value term a next b)
+
+(defn accumulate-i [combiner base-value term a next b]
+  (defn iter [a result]
+    (if
+        (> a b) result
+        (iter (next a) (combiner result (term a)))
+        ))
+  (iter a base-value)
+  )
+
+(accumulate-i + 0 (fn [x] x) 0 inc 10)
+(accumulate-i * 1 (fn [x] x) 1 inc 10)
+
+(defn accumulate [combiner base-value term a next b]
+  (cond
+   (> a b) base-value
+   :else (combiner (term a) (accumulate combiner base-value term (next a) next b))
+   )
+  )
+
+(accumulate-i + 0 (fn [x] x) 0 inc 10)
+(accumulate * 1 (fn [x] x) 1 inc 10)
+
+

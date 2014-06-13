@@ -44,8 +44,8 @@
 
 (defn fact-iter [n product]
   (if
-   (= n 0) product
-   (fact-iter (- n 1) (* product n))))
+      (= n 0) product
+      (fact-iter (- n 1) (* product n))))
 
 (defn factorial-i [n]
   (fact-iter n 1 ))
@@ -91,8 +91,8 @@
 
 (defn sine [angle]
   (if
-   (<= (abs angle) 0.01) angle
-   (p (sine (/ angle 3.0)))))
+      (<= (abs angle) 0.01) angle
+      (p (sine (/ angle 3.0)))))
 
 (sine 90)
 
@@ -102,7 +102,7 @@
       (* b (expt b (- n 1)))))
 
 (expt 2 3)
-   
+
 
 (defn expt-iter [b n product]
   (if 
@@ -141,7 +141,7 @@
   (if
       (= 0 b) a
       (gcd b (rem a b))
-   ))
+      ))
 
 (gcd 6 3)
 
@@ -169,6 +169,7 @@
   (= (smallest-divisor n) n))
 
 (prime? 134)
+(prime? 13)
 
 ;;debug
 ;; (defn expmod [base exp m]
@@ -217,11 +218,11 @@
 
 (defn simpson-integral [f a b n]
   (let [h (/ (- b a) n) k 0]
-    
+
     (defn yn [k]
       (f (+ a (* k h)))
       )
-    
+
     (defn actual-yn [k]
       (cond
        (or (= k 0) (= k n)) (yn k)
@@ -293,3 +294,84 @@
 (accumulate * 1 (fn [x] x) 1 inc 10)
 
 
+;; debug
+;; (defn filtered-accumulate-i [combiner base-value term a next b pred]
+;;   (defn iter [a result pred]
+;;     (cond
+;;      (> a b) result
+;;      (pred a) (iter (next a) (combiner result (term a)) pred)
+;;      :else (iter (next a) result pred)
+;;      )
+;;     )
+;;   (iter a base-value pred)
+;;   )
+
+;; (filtered-accumulate-i + 0 (fn [x] x) 0 inc 10 prime?)
+;; (filtered-accumulate-i * 1 (fn [x] x) 1 inc 10 prime?)
+
+
+;; (defn filtered-accumulate [combiner base-value term a next b pred]
+;;   (cond
+;;    (> a b) base-value
+;;    (pred a) (combiner (term a) (filtered-accumulate combiner base-value term (next a) next b pred))
+;;    :else (filtered-accumulate combiner base-value term (next a) next b pred)
+;;    ))
+
+;; (filtered-accumulate + 0 (fn [x] x) 0 inc 10 prime?)
+;; (filtered-accumulate * 1 (fn [x] x) 1 inc 10 prime?)
+
+
+(defn search [f neg pos]
+  (let [mid (average neg pos)
+        close-enough? (fn [x y] (< (abs (- x y)) 0.001))]
+    (cond
+     (close-enough? neg pos) mid
+     (neg? (f mid)) (search f mid pos)
+     (pos? (f mid)) (search f neg mid)
+     :else mid
+     )
+    ))
+
+(defn half-interval [f a b]
+  (let [a-val (f a)
+        b-val (f b)]
+    (cond
+     (and (pos? a-val) (neg? b-val)) (search f b a)
+     (and (neg? a-val) (pos? b-val)) (search f a b)
+     :else :incorrect-values
+     )))
+
+(half-interval sine 2.0 4.0)
+
+(half-interval (fn [x] (- (cube x) (* 2 x) 3)) 1.0 2)
+
+
+
+(defn fixed-point [f guess]
+  (let [tolerance 0.001
+        close-enough? (fn [x y] (< (abs (- x y)) tolerance))]
+    (defn try-guess [f guess]
+      (println guess)
+      (let [next (f guess)]
+        (if
+            (close-enough? guess next) guess
+            (try-guess f next)
+            ))
+      )
+    (try-guess f guess)
+    ))
+
+(fixed-point #(Math/cos %) 1.0)
+
+(defn square-root [x]
+  (fixed-point #(average % (/ x %)) 1)
+  )
+
+(square-root 4.0)
+
+
+;; golden ratio maps to (x -> 1 + 1/x)
+
+(fixed-point #(+ 1 (/ 1 %)) 1.0)
+
+(fixed-point #(average % (/ (Math/log 1000) (Math/log %))) 10.0)
